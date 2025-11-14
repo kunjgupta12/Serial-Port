@@ -10,27 +10,49 @@ class BerthingDisplayScreen extends StatelessWidget {
     final h = size.height;
 
     return Scaffold(
-      backgroundColor: Colors.blue.shade700,
+    backgroundColor: Colors.lightBlue,
       body: SafeArea(
         child: Center(
           child: Container(
-            width: w * 0.95,          // Match tablet width
-            height: h * 0.95,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/bg.gif'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            width: w * 0.98, // Match tablet width
+            height: h * 0.98,
             padding: const EdgeInsets.all(8),
-            color: Colors.blue.shade300,
+         
             child: Column(
               children: [
+                Container(
+                  width: w * 0.9,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset('assets/logo.jpeg', height: h * 0.15),
+                  ),
+                ),
+                SizedBox(height: h * 0.01),
                 // TOP HEADER: Terminal Name + Logo
                 SizedBox(
-                  height: h * 0.10,
+                  height: h * 0.2,
                   child: Row(
                     children: [
                       Expanded(
-                        flex: 2,
+                        flex: 1,
                         child: Container(
-                          color: Colors.white,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.only(left: 12),
+                          padding: const EdgeInsets.only(left: 8, right: 8),
                           child: const Text(
                             "Terminal Name",
                             style: TextStyle(
@@ -43,132 +65,121 @@ class BerthingDisplayScreen extends StatelessWidget {
                       Expanded(
                         flex: 1,
                         child: Container(
-                          color: Colors.white,
-                          child: const Center(
-                            child: Text(
-                              "LOGO",
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          padding: const EdgeInsets.only(left: 12, right: 10),
+                          child: dataBox(
+                            width: w * 0.4,
+                            title: "Angle",
+                            value: "45°",
+                            height: h * 0.2,
                           ),
                         ),
-                      )
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Container(
+                          padding: const EdgeInsets.only(left: 8, right: 10),
+                          child: compassBox(height: h * 0.2),
+                        ),
+                      ),
                     ],
                   ),
                 ),
 
-                SizedBox(height: h * 0.01),
+                SizedBox(height: h * 0.04),
 
                 // MAIN GRID
-                Expanded(
-                  child: Row(
-                    children: [
-                      // LEFT COLUMN : SENSOR 1
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          children: [
-                            sensorTile(
-                              label: "Sensor",
-                              number: "1",
-                              height: h * 0.20,
-                            ),
-                            SizedBox(height: h * 0.02),
-                            dataBox(
-                              title: "Speed (cm/s)",
-                              value: "123",
-                              height: h * 0.15,
-                            ),
-                            SizedBox(height: h * 0.02),
-                            dataBox(
-                              title: "Distance (m)",
-                              value: "24.5",
-                              height: h * 0.15,
-                            ),
-                          ],
+                Center(
+                  child: SizedBox(
+                    width: w * 0.95, // Controls total width of sensor section
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        sensorTile(
+                          label: "Sensor",
+                          number: "1",
+                          height: h * 0.40,
                         ),
-                      ),
-
-                      SizedBox(width: w * 0.02),
-
-                      // CENTER SECTION : ANGLE + SPACING
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          children: [
-                            dataBox(
-                              title: "Angle",
-                              value: "45°",
-                              height: h * 0.20,
-                            ),
-                            SizedBox(height: h * 0.02),
-                            compassBox(height: h * 0.25),
-                          ],
+                        SizedBox(width: w * 0.03),
+                        // LEFT COLUMN : SENSOR 1
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              dataBox(
+                                width: w * 0.4,
+                                title: "Speed (cm/s)",
+                                value: "123",
+                                height: h * 0.2,
+                              ),
+                              SizedBox(height: h * 0.02),
+                              dataBox(
+                                width: w * 0.4,
+                                title: "Distance  (m)",
+                                value: "24.5",
+                                height: h * 0.2,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
 
-                      SizedBox(width: w * 0.02),
+                        SizedBox(width: w * 0.03),
 
-                      // RIGHT COLUMN : SENSOR 2
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          children: [
-                            sensorTile(
-                              label: "Sensor",
-                              number: "2",
-                              height: h * 0.20,
-                            ),
-                            SizedBox(height: h * 0.02),
-                            dataBox(
-                              title: "Speed (cm/s)",
-                              value: "987",
-                              height: h * 0.15,
-                            ),
-                            SizedBox(height: h * 0.02),
-                            dataBox(
-                              title: "Distance (m)",
-                              value: "54.2",
-                              height: h * 0.15,
-                            ),
-                          ],
+                        // RIGHT COLUMN : SENSOR 2
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              dataBox(
+                                width: w * 0.4,
+                                title: "Speed (cm/s)",
+                                value: "987",
+                                height: h * 0.2,
+                              ),
+                              SizedBox(height: h * 0.02),
+                              dataBox(
+                                width: w * 0.4,
+                                title: "Distance  (m)",
+                                value: "54.2",
+                                height: h * 0.2,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // FOOTER
-                SizedBox(height: h * 0.01),
-                Container(
-                  height: h * 0.07,
-                  width: double.infinity,
-                  color: Colors.white,
-                  alignment: Alignment.center,
-                  child: const Text(
-                    "HI-TECH BERTH APPROACH SYSTEM",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                        SizedBox(width: w * 0.03),
+                        sensorTile(
+                          label: "Sensor",
+                          number: "2",
+                          height: h * 0.40,
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                SizedBox(height: h * 0.005),
-                Container(
-                  height: h * 0.06,
-                  width: double.infinity,
-                  color: Colors.white,
-                  alignment: Alignment.center,
-                  child: const Text(
-                    "Client Logo",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                ),SizedBox(height: h * 0.02),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "www.hitechelastomers.com",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),SizedBox(width: 20),
+                    ElevatedButton(
+                      style: ButtonStyle(
+                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5.0),
+                          ),
+                        ),
+                      ),
+                      onPressed: () {},
+                      child: Text("Connect",style: TextStyle(color: Colors.black,fontSize: 25),),
                     ),
-                  ),
-                )
+                  ],
+                ),
               ],
             ),
           ),
@@ -187,22 +198,23 @@ class BerthingDisplayScreen extends StatelessWidget {
     required double height,
   }) {
     return Container(
+      padding: const EdgeInsets.all(8),
       height: height,
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.black, width: 3),
         color: Colors.grey.shade200,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          ),
           Text(
             number,
-            style: const TextStyle(
-              fontSize: 80,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 80, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -213,28 +225,40 @@ class BerthingDisplayScreen extends StatelessWidget {
     required String title,
     required String value,
     required double height,
+    required double width,
   }) {
     return Container(
+      width: width,
       height: height,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 3),
+        border: Border.all(color: Colors.black, width: 2),
         color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 12),
+              padding: const EdgeInsets.only(top: 8.0),
               child: Text(
                 title,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
           Container(
             width: 100,
-            color: Colors.black,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              border: Border.all(color: Colors.black, width: 2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+
             alignment: Alignment.center,
             child: Text(
               value,
@@ -245,6 +269,7 @@ class BerthingDisplayScreen extends StatelessWidget {
               ),
             ),
           ),
+          SizedBox(height: 8),
         ],
       ),
     );
@@ -254,7 +279,8 @@ class BerthingDisplayScreen extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 3),
+        borderRadius: BorderRadius.circular(8),
+
         color: Colors.white,
       ),
       child: const Center(

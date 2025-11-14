@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:serial_port/homepage.dart';
 
 void main() {
   runApp(const SerialPortApp());
@@ -15,7 +16,7 @@ class SerialPortApp extends StatelessWidget {
     return const MaterialApp(
       title: 'Serial Port Tester',
       debugShowCheckedModeBanner: false,
-      home: SerialPortHome(),
+      home: BerthingDisplayScreen(),
     );
   }
 }
