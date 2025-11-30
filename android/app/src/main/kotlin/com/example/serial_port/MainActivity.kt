@@ -68,6 +68,9 @@ class MainActivity : FlutterActivity(), SerialInputOutputManager.Listener {
                     disconnectAll()
                     result.success("Disconnected")
                 }
+"autoConnectLoRa" -> {
+    result.success(autoDetectLoRa())
+}
 
                 "sendData" -> {
                     val data = call.argument<String>("data")
@@ -132,75 +135,115 @@ class MainActivity : FlutterActivity(), SerialInputOutputManager.Listener {
     }
 
     // ----------------------- USB Section -----------------------
+private fun connectUsbDevice(deviceName: String?): String {
+    if (deviceName == null) return "Invalid device"
 
-    private fun connectUsbDevice(deviceName: String?): String {
-        if (deviceName == null) return "Invalid device"
+    val drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
+    for (driver in drivers) {
+        val device = driver.device
+        if (device.deviceName == deviceName) {
+            // ✅ Request permission if not already granted
+            if (!usbManager.hasPermission(device)) {
+                val permissionIntent = PendingIntent.getBroadcast(
+                    this,
+                    0,
+                    Intent(ACTION_USB_PERMISSION),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+                usbManager.requestPermission(device, permissionIntent)
+                Log.d(TAG, "Requesting permission for ${device.deviceName}")
+                return "Requesting USB permission..."
+            }
 
-        val drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
-        for (driver in drivers) {
-            val device = driver.device
-            if (device.deviceName == deviceName) {
-                if (!usbManager.hasPermission(device)) {
-                    val permissionIntent = PendingIntent.getBroadcast(
-                        this,
-                        0,
-                        Intent(ACTION_USB_PERMISSION),
-                        PendingIntent.FLAG_IMMUTABLE
-                    )
-                    usbManager.requestPermission(device, permissionIntent)
-                    return "Requesting USB permission..."
+            try {
+                val connection = usbManager.openDevice(device)
+                    ?: return "Cannot open USB device"
+
+                // ✅ Explicitly claim interface (prevents controlTransfer failure)
+                val usbInterface = device.getInterface(0)
+                if (!connection.claimInterface(usbInterface, true)) {
+                    Log.e(TAG, "Failed to claim interface for ${device.deviceName}")
+                    return "Failed to claim interface"
                 }
 
-                try {
-                    val connection = usbManager.openDevice(device)
-                        ?: return "Cannot open USB device"
-                    serialPortUsb = driver.ports[0]
-                    serialPortUsb?.open(connection)
-                    serialPortUsb?.setParameters(
-                        9600,
-                        8,
-                        UsbSerialPort.STOPBITS_1,
-                        UsbSerialPort.PARITY_NONE
-                    )
-                    ioManager = SerialInputOutputManager(serialPortUsb, this)
-                    Executors.newSingleThreadExecutor().submit(ioManager)
+                serialPortUsb = driver.ports[0]
+                serialPortUsb?.open(connection)
 
-                    return "Connected to USB: $deviceName"
-                } catch (e: Exception) {
-                    Log.e(TAG, "USB connection failed: ${e.message}")
-                    return "Error: ${e.message}"
-                }
+                // ✅ Set params after successful claim
+                serialPortUsb?.setParameters(
+                    9600,
+                    8,
+                    UsbSerialPort.STOPBITS_1,
+                    UsbSerialPort.PARITY_NONE
+                )
+
+                ioManager = SerialInputOutputManager(serialPortUsb, this)
+                Executors.newSingleThreadExecutor().submit(ioManager)
+
+                Log.i(TAG, "✅ Connected successfully to ${device.deviceName}")
+                return "Connected to USB: $deviceName"
+
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ USB connection failed: ${e.message}")
+                return "Error: ${e.message}"
             }
         }
-        return "USB device not found"
     }
+    return "USB device not found"
+}
 
     // ----------------------- UART / LoRa Section -----------------------
-
-    private fun connectLoRaDevice(devicePath: String, baudRate: Int): String {
-        return try {
-            val baudValue = when (baudRate) {
-                9600 -> "0000015".toInt(8)
-                115200 -> "0010002".toInt(8)
-                else -> "0000015".toInt(8)
-            }
-
-            serialPortLoRa = SerialPort(devicePath, baudValue, object : SerialPort.DataCallback {
-                override fun onData(data: ByteArray) {
-                    val msg = String(data, StandardCharsets.UTF_8)
-                    Log.d(TAG, "📩 LoRa Received: $msg")
-                    runOnUiThread { eventSink?.success(msg) }
-                }
-            })
-
-            currentLoRaDevice = devicePath
-            Log.i(TAG, "✅ LoRa connected on $devicePath @ $baudRate")
-            "LoRa connected on $devicePath"
-        } catch (e: Exception) {
-            Log.e(TAG, "LoRa connection failed: ${e.message}")
-            "Error: ${e.message}"
+private fun connectLoRaDevice(devicePath: String, baudRate: Int): String {
+    return try {
+        // Proper baud rate setup
+        val baudValue = when (baudRate) {
+            9600 -> "0000015".toInt(8)
+            115200 -> "0010002".toInt(8)
+            else -> "0000015".toInt(8)
         }
+
+        // ✅ Create LoRa serial port with callback
+        serialPortLoRa = SerialPort(devicePath, baudValue, object : SerialPort.DataCallback {
+            override fun onData(data: ByteArray) {
+                val msg = String(data, StandardCharsets.UTF_8)
+                Log.d(TAG, "📩 LoRa Received: $msg")
+                runOnUiThread {
+                     eventSink?.success(data)
+                }
+            }
+        })
+
+        currentLoRaDevice = devicePath
+        Log.i(TAG, "✅ LoRa connected on $devicePath @ $baudRate baud")
+        "LoRa connected on $devicePath"
+    } catch (e: Exception) {
+        Log.e(TAG, "❌ LoRa connection failed: ${e.message}")
+        "Error: ${e.message}"
     }
+}
+private fun autoDetectLoRa(): String {
+    val devDir = File("/dev")
+
+    val files = devDir.listFiles()
+        ?.filter { it.name.startsWith("tty") } // finds ttyS*, ttyUSB*, ttysWK*
+        ?: emptyList()
+
+    if (files.isEmpty()) {
+        Log.e(TAG, "❌ No /dev/tty* devices found")
+        return "No serial devices found"
+    }
+
+    // Prefer ttysWK* (your LoRa device)
+    val preferred = files.firstOrNull { it.name.contains("sWK", ignoreCase = true) }
+
+    val devicePath = preferred?.absolutePath ?: files.first().absolutePath
+
+    Log.i(TAG, "🔍 Auto-detected LoRa device: $devicePath")
+
+    // Auto-connect using your existing method
+    return connectLoRaDevice(devicePath, 9600)
+}
+
 
     // ----------------------- Shared Actions -----------------------
 

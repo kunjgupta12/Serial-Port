@@ -30,10 +30,13 @@ class SerialPortHome extends StatefulWidget {
 
 class _SerialPortHomeState extends State<SerialPortHome> {
   static const _methodChannel = MethodChannel('com.example.serial_port/usb');
-  static const _eventChannel = EventChannel('com.example.serial_port/usb_stream');
+  static const _eventChannel = EventChannel(
+    'com.example.serial_port/usb_stream',
+  );
 
   List<dynamic> _devices = [];
-  String? _connectedDevice; // stores a display id like 'usb:/dev/bus/usb/...' or 'uart:/dev/ttyS1'
+  String?
+  _connectedDevice; // stores a display id like 'usb:/dev/bus/usb/...' or 'uart:/dev/ttyS1'
   String _status = 'Idle';
   bool _isScanning = false;
   bool _isConnecting = false;
@@ -51,17 +54,20 @@ class _SerialPortHomeState extends State<SerialPortHome> {
 
   /// Listen to EventChannel from Android native (USB/UART incoming data)
   void _listenToSerialData() {
-    _usbSubscription = _eventChannel.receiveBroadcastStream().listen((event) {
-      setState(() {
-        _log.add("${_timestamp()} RX → $event");
-      });
-      _autoScroll();
-    }, onError: (error) {
-      setState(() {
-        _log.add("${_timestamp()} ⚠️ Error: $error");
-      });
-      _autoScroll();
-    });
+    _usbSubscription = _eventChannel.receiveBroadcastStream().listen(
+      (event) {
+        setState(() {
+          _log.add("${_timestamp()} RX → $event");
+        });
+        _autoScroll();
+      },
+      onError: (error) {
+        setState(() {
+          _log.add("${_timestamp()} ⚠️ Error: $error");
+        });
+        _autoScroll();
+      },
+    );
   }
 
   String _timestamp() {
@@ -92,7 +98,9 @@ class _SerialPortHomeState extends State<SerialPortHome> {
       final devices = jsonDecode(result);
       setState(() {
         _devices = devices;
-        _status = devices.isEmpty ? 'No devices found' : 'Devices found (${devices.length})';
+        _status = devices.isEmpty
+            ? 'No devices found'
+            : 'Devices found (${devices.length})';
       });
       _log.add("${_timestamp()} 🔍 Found devices: $devices");
     } catch (e) {
@@ -117,13 +125,18 @@ class _SerialPortHomeState extends State<SerialPortHome> {
       if (device['type'] == 'usb') {
         final deviceName = device['name'] as String?;
         if (deviceName == null) throw Exception('Invalid USB device name');
-        result = await _methodChannel.invokeMethod('connectUsb', {'deviceName': deviceName});
+        result = await _methodChannel.invokeMethod('connectUsb', {
+          'deviceName': deviceName,
+        });
         displayId = 'usb:$deviceName';
       } else if (device['type'] == 'uart') {
         final path = device['path'] as String?;
         if (path == null) throw Exception('Invalid UART path');
         // default baudRate 9600, change if you wish to show UI for baud selection
-        result = await _methodChannel.invokeMethod('connectLoRa', {'path': path, 'baudRate': 9600});
+        result = await _methodChannel.invokeMethod('connectLoRa', {
+          'path': path,
+          'baudRate': 9600,
+        });
         displayId = 'uart:$path';
       } else {
         throw Exception('Unknown device type');
@@ -161,7 +174,9 @@ class _SerialPortHomeState extends State<SerialPortHome> {
     final text = _sendController.text.trim();
     if (text.isEmpty) return;
     try {
-      final result = await _methodChannel.invokeMethod('sendData', {'data': text});
+      final result = await _methodChannel.invokeMethod('sendData', {
+        'data': text,
+      });
       _log.add("${_timestamp()} TX → $text");
       _log.add("${_timestamp()} ✅ $result");
       _sendController.clear();
@@ -190,7 +205,10 @@ class _SerialPortHomeState extends State<SerialPortHome> {
           if (isConnected)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Icon(Icons.usb_rounded, color: Colors.greenAccent.shade400),
+              child: Icon(
+                Icons.usb_rounded,
+                color: Colors.greenAccent.shade400,
+              ),
             ),
         ],
       ),
@@ -225,16 +243,23 @@ class _SerialPortHomeState extends State<SerialPortHome> {
                 itemCount: _devices.length,
                 itemBuilder: (context, index) {
                   final d = Map<String, dynamic>.from(_devices[index] as Map);
-                  final isThisConnected = _connectedDevice != null &&
-                      (_connectedDevice == 'usb:${d['name']}' || _connectedDevice == 'uart:${d['path']}');
+                  final isThisConnected =
+                      _connectedDevice != null &&
+                      (_connectedDevice == 'usb:${d['name']}' ||
+                          _connectedDevice == 'uart:${d['path']}');
 
-                  final title = d['type'] == 'usb' ? (d['name'] ?? 'USB device') : (d['path'] ?? 'UART device');
+                  final title = d['type'] == 'usb'
+                      ? (d['name'] ?? 'USB device')
+                      : (d['path'] ?? 'UART device');
                   final subtitle = d['type'] == 'usb'
                       ? "VID: ${d['vendorId'] ?? '-'} | PID: ${d['productId'] ?? '-'}"
                       : "UART: ${d['path'] ?? '-'}";
 
                   return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     child: ListTile(
                       leading: Icon(
                         d['type'] == 'usb' ? Icons.usb_rounded : Icons.router,
@@ -246,8 +271,8 @@ class _SerialPortHomeState extends State<SerialPortHome> {
                         onPressed: _isConnecting
                             ? null
                             : isThisConnected
-                                ? null
-                                : () => _connectDevice(d),
+                            ? null
+                            : () => _connectDevice(d),
                         child: Text(isThisConnected ? 'Connected' : 'Connect'),
                       ),
                     ),
@@ -278,7 +303,9 @@ class _SerialPortHomeState extends State<SerialPortHome> {
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                    ),
                     onPressed: _disconnectDevice,
                     child: const Text('Disconnect'),
                   ),
@@ -298,10 +325,16 @@ class _SerialPortHomeState extends State<SerialPortHome> {
                 itemCount: _log.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     child: Text(
                       _log[index],
-                      style: const TextStyle(color: Colors.greenAccent, fontSize: 13),
+                      style: const TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 13,
+                      ),
                     ),
                   );
                 },
