@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:serial_port/widget/supprt.dart';
+import 'package:ship_berthing_system/widget/supprt.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BerthingDisplayScreen extends StatefulWidget {
@@ -48,7 +48,7 @@ class _BerthingDisplayScreenState extends State<BerthingDisplayScreen> {
     });
   }
 
-  /// Convert hex string like "007800f00032012c0046" → integer list
+  /// Convert hex string like "007800f00032012c0046" → signed integer list
   List<int> decodeHexToValues(String hex) {
     final bytes = <int>[];
 
@@ -59,7 +59,12 @@ class _BerthingDisplayScreenState extends State<BerthingDisplayScreen> {
     final out = <int>[];
 
     for (int i = 0; i < bytes.length; i += 2) {
-      out.add((bytes[i] << 8) | bytes[i + 1]);
+      int value = (bytes[i] << 8) | bytes[i + 1];
+      // Convert to signed 16-bit integer
+      if (value > 32767) {
+        value = value - 65536;
+      }
+      out.add(value);
     }
 
     return out;
@@ -334,7 +339,7 @@ class _BerthingDisplayScreenState extends State<BerthingDisplayScreen> {
                         child: dataBox(
                           width: w * 0.4,
                           title: "Angle(Degree)",
-                          value: "$angleDegree°",
+                          value: "${angleDegree.toString().padLeft(3, '0')}°",
                           height: h * 0.2,
                         ),
                       ),
@@ -373,16 +378,16 @@ class _BerthingDisplayScreenState extends State<BerthingDisplayScreen> {
                           children: [
                             dataBox(
                               width: w * 0.4,
-                              title: "Speed (cm/s)",
-                              value: sensor1Speed.toString(),
+                              title: "Distance  (m)",
+                              value: sensor1Speed.toString().padLeft(3, '0'),
 
                               height: h * 0.2,
                             ),
                             SizedBox(height: h * 0.02),
                             dataBox(
                               width: w * 0.4,
-                              title: "Distance  (m)",
-                              value: sensor1Distance.toString(),
+                              title: "Speed (cm/s)",
+                              value: sensor1Distance.toString().padLeft(3, '0'),
 
                               height: h * 0.2,
                             ),
@@ -399,16 +404,16 @@ class _BerthingDisplayScreenState extends State<BerthingDisplayScreen> {
                           children: [
                             dataBox(
                               width: w * 0.4,
-                              title: "Speed (cm/s)",
-                              value: sensor2Speed.toString(),
+                              title: "Distance  (m)",
+                              value: sensor2Speed.toString().padLeft(3, '0'),
 
                               height: h * 0.2,
                             ),
                             SizedBox(height: h * 0.02),
                             dataBox(
                               width: w * 0.4,
-                              title: "Distance  (m)",
-                              value: sensor2Distance.toString(),
+                              title: "Speed (cm/s)",
+                              value: sensor2Distance.toString().padLeft(3, '0'),
 
                               height: h * 0.2,
                             ),

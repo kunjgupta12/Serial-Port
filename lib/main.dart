@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:serial_port/homepage.dart';
+import 'package:ship_berthing_system/homepage.dart';
 
 void main() {
   runApp(const SerialPortApp());
