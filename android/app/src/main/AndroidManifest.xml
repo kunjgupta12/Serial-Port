@@ -6,8 +6,8 @@
 
 
     <application
-        android:label="serial_port"
-        android:name="${applicationName}"
+        android:label="Hi-Tech Berth Approach System"
+    
         android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
